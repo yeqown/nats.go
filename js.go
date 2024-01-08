@@ -567,7 +567,7 @@ func (js *js) PublishMsg(m *Msg, opts ...PubOpt) (*PubAck, error) {
 	}
 
 	var pa pubAckResponse
-	fmt.Printf("PublishMsg got resp.Data: %s\n", resp.Data)
+	fmt.Printf("PublishMsg got resp.Data: %s, resp: %+v\n", resp.Data, resp)
 	if err = json.Unmarshal(resp.Data, &pa); err != nil {
 		return nil, wrapError(ErrInvalidJSAck, fmt.Sprintf("nats: error parsing publish response: %v", err))
 	}

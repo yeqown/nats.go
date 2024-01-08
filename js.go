@@ -567,16 +567,25 @@ func (js *js) PublishMsg(m *Msg, opts ...PubOpt) (*PubAck, error) {
 	}
 
 	var pa pubAckResponse
-	if err := json.Unmarshal(resp.Data, &pa); err != nil {
-		return nil, ErrInvalidJSAck
+	fmt.Printf("PublishMsg got resp.Data: %s\n", resp.Data)
+	if err = json.Unmarshal(resp.Data, &pa); err != nil {
+		return nil, wrapError(ErrInvalidJSAck, fmt.Sprintf("nats: error parsing publish response: %v", err))
 	}
 	if pa.Error != nil {
-		return nil, pa.Error
+		return nil, fmt.Errorf("nats: publish error: %s", pa.Error.Description)
 	}
 	if pa.PubAck == nil || pa.PubAck.Stream == _EMPTY_ {
-		return nil, ErrInvalidJSAck
+		return nil, wrapError(ErrInvalidJSAck, "nats: publish response missing ack or stream in ack")
 	}
 	return pa.PubAck, nil
+}
+
+func wrapError(err error, message string) error {
+	if err == nil {
+		return nil
+	}
+
+	return fmt.Errorf("%s: %w", message, err)
 }
 
 // Publish publishes a message to a stream from JetStream.
@@ -3620,7 +3629,7 @@ const (
 	// DiscardOld will remove older messages to return to the limits. This is
 	// the default.
 	DiscardOld DiscardPolicy = iota
-	//DiscardNew will fail to store new messages.
+	// DiscardNew will fail to store new messages.
 	DiscardNew
 )
 
